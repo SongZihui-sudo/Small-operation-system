@@ -1,2 +1,20 @@
 # Small-operation-system
 一个基于汇编的像是系统的操作系统，哈哈😀
+
+#Small操作系统
+基于汇编的操作系统。
+这个项目将于这几天启动。😊
+主要的打算实现的功能有:
+
+1.多任务调度。
+
+2.加减乘除计算功能。
+
+2.读取键盘输入与显示。
+
+Operating system based on Assembly language.
+The project will be launched in the next few days. Yoo
+The main functions intended to be implemented are
+1. Multitask scheduling.
+2. add , subtract , multiply and divide
+3. There are also drivers for the key(get data from key),and show it at screen.
