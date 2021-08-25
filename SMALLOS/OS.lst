@@ -1,0 +1,162 @@
+A51 MACRO ASSEMBLER  OS                                                                   08/25/2021 20:52:45 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.01
+OBJECT MODULE PLACED IN OS.obj
+ASSEMBLER INVOKED BY: C:\Keil\C51\BIN\A51.EXE ASM\OS.a51 SET(SMALL) DEBUG PRINT(.\OS.lst) OBJECT(OS.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;程序执行的起始地址    
+0000                   2     ORG     0000H                           
+0000 020030            3         LJMP        Main                    
+0023                   4     ORG     0023H
+0023 020099            5         LJMP INTER
+0030                   6     ORG     0030H
+                       7     
+0030                   8     Main: 
+0030 758160            9         MOV SP,#60H
+                      10         ;初始化串口参数
+0033 758920           11         MOV TMOD,#020H              ;9600bps
+0036 759850           12             MOV SCON,#50H           
+0039 758DFD           13             MOV TH1,#0FDH           
+003C 758BFD           14             MOV TL1,#0FDH
+003F 758700           15             MOV PCON,#00H
+0042 D2AF             16             SETB EA                         
+0044 D2AC             17             SETB ES         
+0046 D28E             18             SETB TR1
+                      19         ;DPTR指向数组
+0048 9000AB           20         MOV DPTR,#STR_Tab   
+004B 7800             21             MOV R0,#00H                     
+                      22     
+004D                  23     PRINTF: 
+004D E8               24         MOV  A,R0                   ;下标赋值
+004E 93               25             MOVC A, @A+DPTR         ;读取数组数据
+004F C2AC             26         CLR  ES
+0051 C299             27         CLR  TI
+0053 F599             28         MOV SBUF,A
+0055 1163             29         CALL DEALAY
+                      30     
+0057 08               31         INC R0                              ;下标自加
+0058 1163             32         CALL DEALAY
+005A B81E04           33         CJNE R0,#01EH,Next  ;判断是否为30，否则进去STOP，防止循环重复输出
+005D 116C             34         CALL SHELL
+005F 1175             35         CALL SHELLPR
+0061                  36     Next:           
+0061 80EA             37             SJMP PRINTF
+                      38         ;延时     
+0063                  39     DEALAY:                                         
+0063 7FFA             40         MOV R7,#250 
+0065                  41         D1: 
+0065 7EFA             42             MOV R6,#250    
+0067                  43         D2: 
+0067 DEFE             44             DJNZ R6,D2     
+0069 DFFA             45         DJNZ R7,D1  
+006B 22               46         RET
+                      47     
+006C                  48     SHELL:
+006C 900000           49         MOV DPTR,#00H
+006F 9000C9           50         MOV DPTR,#SHELL_Tab         
+0072 7900             51         MOV         R1,#00H
+0074 22               52         RET
+0075                  53     SHELLPR:
+                      54         
+0075 E9               55         MOV  A,R1                   ;下标赋值
+0076 93               56             MOVC A, @A+DPTR         ;读取数组数据
+0077 C2AC             57         CLR  ES
+0079 C299             58         CLR  TI
+A51 MACRO ASSEMBLER  OS                                                                   08/25/2021 20:52:45 PAGE     2
+
+007B F599             59         MOV SBUF,A
+007D 1163             60         CALL DEALAY
+                      61     
+007F 09               62         INC R1                              ;下标自加
+0080 1163             63         CALL DEALAY
+0082 B90A02           64         CJNE R1,#0AH,Next2  ;判断是否为30，否则进去STOP，防止循环重复输出
+0085 1189             65         CALL STOP_2
+0087                  66     Next2:
+0087 80EC             67         SJMP SHELLPR
+                      68         ;停止重复发送 
+0089                  69     STOP_2:
+0089 D299             70         SETB TI
+008B D2AC             71         SETB        ES
+008D 1199             72         CALL INTER
+008F 1189             73         CALL STOP_2
+                      74         ;读取键盘输入
+0091                  75     RX:
+0091 F599             76         MOV SBUF,A
+0093 3099FD           77         JNB TI,$
+0096 C299             78         CLR TI
+0098 22               79         RET
+                      80     
+0099                  81     INTER:
+0099 C0E0             82         PUSH ACC                            
+009B C0D0             83         PUSH PSW
+009D 109906           84         JBC TI, L_EXIT
+00A0 C298             85             CLR RI                  ;否则清除发送标志位
+00A2 E599             86         MOV A,SBUF
+00A4 1191             87         CALL RX
+00A6                  88     L_EXIT:
+00A6 D0D0             89         POP PSW
+00A8 D0E0             90         POP ACC
+00AA 32               91         RETI
+                      92         ;判断是否发送完毕
+                      93     ;要发送的数据
+00AB                  94     STR_Tab:                                
+00AB 48454C4C         95         DB 48H,45H,4CH,4CH,4FH,57H,4FH,52H,4CH,44H,0AH,0DH,57H,45H,4CH,43H,4FH,4DH,45H,0AH,0DH,
+                             53H,4DH,41H,4CH,4CH,4FH,53H,0AH,0DH;HELLOWORDWELCOMESMALLOS
+00AF 4F574F52                
+00B3 4C440A0D                
+00B7 57454C43                
+00BB 4F4D450A                
+00BF 0D534D41                
+00C3 4C4C4F53                
+00C7 0A0D                    
+00C9                  96     SHELL_TAB:
+00C9 534D414C         97         DB 53H,4DH,41H,4CH,4CH,4FH,53H,3AH,0AH,0DH
+00CD 4C4F533A                
+00D1 0A0D                    
+                      98     END 
+A51 MACRO ASSEMBLER  OS                                                                   08/25/2021 20:52:45 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ACC. . . . . . . .  D ADDR   00E0H   A   
+D1 . . . . . . . .  C ADDR   0065H   A   
+D2 . . . . . . . .  C ADDR   0067H   A   
+DEALAY . . . . . .  C ADDR   0063H   A   
+EA . . . . . . . .  B ADDR   00A8H.7 A   
+ES . . . . . . . .  B ADDR   00A8H.4 A   
+INTER. . . . . . .  C ADDR   0099H   A   
+L_EXIT . . . . . .  C ADDR   00A6H   A   
+MAIN . . . . . . .  C ADDR   0030H   A   
+NEXT . . . . . . .  C ADDR   0061H   A   
+NEXT2. . . . . . .  C ADDR   0087H   A   
+PCON . . . . . . .  D ADDR   0087H   A   
+PRINTF . . . . . .  C ADDR   004DH   A   
+PSW. . . . . . . .  D ADDR   00D0H   A   
+RI . . . . . . . .  B ADDR   0098H.0 A   
+RX . . . . . . . .  C ADDR   0091H   A   
+SBUF . . . . . . .  D ADDR   0099H   A   
+SCON . . . . . . .  D ADDR   0098H   A   
+SHELL. . . . . . .  C ADDR   006CH   A   
+SHELLPR. . . . . .  C ADDR   0075H   A   
+SHELL_TAB. . . . .  C ADDR   00C9H   A   
+SP . . . . . . . .  D ADDR   0081H   A   
+STOP_2 . . . . . .  C ADDR   0089H   A   
+STR_TAB. . . . . .  C ADDR   00ABH   A   
+TH1. . . . . . . .  D ADDR   008DH   A   
+TI . . . . . . . .  B ADDR   0098H.1 A   
+TL1. . . . . . . .  D ADDR   008BH   A   
+TMOD . . . . . . .  D ADDR   0089H   A   
+TR1. . . . . . . .  B ADDR   0088H.6 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

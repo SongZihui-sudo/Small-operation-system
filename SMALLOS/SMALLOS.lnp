@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"OS.obj" 
+TO "SMALLOS" 
+RAMSIZE(256) 
