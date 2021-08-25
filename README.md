@@ -22,3 +22,4 @@ The main functions intended to be implemented are
 # 2021-8-25 第一次更新SmallOS 0.1
 基于STC89C52RC单片机，实现字符串的基本输出与输入。
 借助了putty
+源码在keil工程里。
