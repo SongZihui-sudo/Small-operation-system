@@ -10,7 +10,7 @@
 
 2.加减乘除计算功能。
 
-2.读取键盘输入与显示。
+3.读取键盘输入与显示。
 
 Operating system based on Assembly language.
 The project will be launched in the next few days. Yoo
@@ -18,6 +18,7 @@ The main functions intended to be implemented are
 1. Multitask scheduling.
 2. add , subtract , multiply and divide
 3. There are also drivers for the key(get data from key),and show it at screen.
+
 #2021-8-25 第一次更新SmallOS 0.1
 基于STC89C52RC单片机，实现字符串的基本输出与输入。
 借助了putty
