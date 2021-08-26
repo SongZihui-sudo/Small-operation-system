@@ -23,3 +23,6 @@ The main functions intended to be implemented are
 基于STC89C52RC单片机，实现字符串的基本输出与输入。
 借助了putty。
 源码在keil工程里。
+
+# 2021-8-26 第二次更新SmallOS 0.2
+1.加入换行功能，默认为0，可以在程序中修改。
