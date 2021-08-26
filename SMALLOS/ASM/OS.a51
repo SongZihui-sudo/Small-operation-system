@@ -16,6 +16,7 @@ Main:
 	SETB EA				
 	SETB ES		
 	SETB TR1
+    CALL TIME_INIT
     ;DPTR指向数组
     MOV DPTR,#STR_Tab  	
 	MOV R0,#00H			
@@ -68,27 +69,35 @@ Next2:
     ;停止重复发送 
 STOP_2:
     SETB TI
-    SETB 	ES
+    SETB ES
     CALL INTER
-    CALL STOP_2
+CMP_:
+	
+    CJNE A, #30H, RX
+    CALL SHELL
+	CALL SHELLPR
     ;读取键盘输入
-RX:
+RX:	
     MOV SBUF,A
     JNB TI,$
     CLR TI
     RET
-
 INTER:
     PUSH ACC				
     PUSH PSW
     JBC TI, L_EXIT
 	CLR RI			;否则清除发送标志位
     MOV A,SBUF
-    CALL RX
+    CALL CMP_
 L_EXIT:
     POP PSW
     POP ACC
     RETI
+TIME_INIT:
+    MOV 	TL0,#0B0H
+	MOV 	TH0,#3CH
+	SETB 	ET0
+    RET
     ;判断是否发送完毕
 ;要发送的数据
 STR_Tab: 				
