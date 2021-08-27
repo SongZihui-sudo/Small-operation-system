@@ -49,7 +49,6 @@ PRINTF:
     CALL DEALAY
 
     INC	R0				;下标自加
-    CALL DEALAY
     CJNE R0,#0AH,Next	;判断是否为30，否则进去STOP，防止循环重复输出
     MOV R0,#30H
     RET
