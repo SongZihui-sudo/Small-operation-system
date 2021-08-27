@@ -27,5 +27,5 @@ The main functions intended to be implemented are
 # 2021-8-26 第二次更新SmallOS 0.2
 加入换行功能，默认为回车，可以在程序中修改,并加入了定时器0的初始化。
 
-#2021-8-27  第三次更新SmallOS 0.3
+# 2021-8-27 第三次更新SmallOS 0.3
 优化了现有代码，简化了字符串输出函数。
