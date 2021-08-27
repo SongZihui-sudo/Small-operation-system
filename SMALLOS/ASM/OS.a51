@@ -16,15 +16,20 @@ Main:
 	SETB EA				
 	SETB ES		
 	SETB TR1
+    CALL PRINT_TIP
+
+PRINT_TIP:
     ;DPTR指向数组
     MOV DPTR,#TIP0  	
 	MOV R0,#00H	
     CALL PRINTF
 
-    MOV DPTR,#STR_Tab  	
+    MOV DPTR,#STR_Tab  	 ;解决多次重复输出的BUG
 	MOV R0,#00H	
-    CALL PRINTF		
+    CALL PRINTF
+    CALL PRINT_TIP2
 
+PRINT_TIP2:
     MOV DPTR,#STR0_TAB
     MOV R0,#00H
     CALL PRINTF
@@ -49,6 +54,7 @@ PRINTF:
     CALL DEALAY
 
     INC	R0				;下标自加
+    CALL DEALAY
     CJNE R0,#0AH,Next	;判断是否为30，否则进去STOP，防止循环重复输出
     MOV R0,#30H
     RET
@@ -63,10 +69,7 @@ STOP:
     ;判断进行换行操作   
 CMP_:
 	CJNE A, #0DH, RX
-    MOV DPTR,#STR0_Tab  	
-    MOV R0,#00H 
-    CALL PRINTF
-    CALL STOP
+    CALL PRINT_TIP2
     ;读取键盘输入
 RX:	
     MOV SBUF,A
@@ -92,4 +95,4 @@ STR0_TAB:
     DB 0AH,0DH,53H,4DH,41H,4CH,4CH,4FH,53H,3AH;SMALLOS:
 TIP0:
     DB 5BH,4FH,4BH,5DH,55H,41H,52H,54H,0AH,0DH;[OK]UART
-END    
+END   
