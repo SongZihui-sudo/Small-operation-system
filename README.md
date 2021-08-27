@@ -19,10 +19,13 @@ The main functions intended to be implemented are
 2. add , subtract , multiply and divide
 3. There are also drivers for the key(get data from key),and show it at screen.
 
-# 2021-8-25 第一次更新SmallOS 0.1
+# 2021-8-25  第一次更新SmallOS 0.1
 基于STC89C52RC单片机，实现字符串的基本输出与输入（通过串口）。
 借助了putty。
 源码在keil工程里。
 
 # 2021-8-26 第二次更新SmallOS 0.2
-加入换行功能，默认为0，可以在程序中修改,并加入了定时器0的初始化。
+加入换行功能，默认为回车，可以在程序中修改,并加入了定时器0的初始化。
+
+#2021-8-27  第三次更新SmallOS 0.3
+优化了现有代码，简化了字符串输出函数。
