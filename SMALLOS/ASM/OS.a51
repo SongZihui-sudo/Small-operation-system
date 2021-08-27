@@ -2,7 +2,7 @@
 ORG 	0000H				
     LJMP 	Main			
 ORG 	0023H
-    LJMP INTER
+    LJMP UART_INTER
 ORG     0030H
 
 Main: 
@@ -16,10 +16,29 @@ Main:
 	SETB EA				
 	SETB ES		
 	SETB TR1
-    CALL TIME_INIT
     ;DPTR指向数组
+    MOV DPTR,#TIP0  	
+	MOV R0,#00H	
+    CALL PRINTF
+
     MOV DPTR,#STR_Tab  	
-	MOV R0,#00H			
+	MOV R0,#00H	
+    CALL PRINTF		
+
+    MOV DPTR,#STR0_TAB
+    MOV R0,#00H
+    CALL PRINTF
+    CALL STOP
+
+    ;延时	
+DEALAY:						
+    MOV R7,#250 
+    D1: 
+        MOV R6,#250    
+    D2: 
+        DJNZ R6,D2     
+    DJNZ R7,D1  
+    RET
 
 PRINTF: 
     MOV	 A,R0			;下标赋值
@@ -31,58 +50,31 @@ PRINTF:
 
     INC	R0				;下标自加
     CALL DEALAY
-    CJNE R0,#01EH,Next	;判断是否为30，否则进去STOP，防止循环重复输出
-    CALL SHELL
-    CALL SHELLPR
+    CJNE R0,#0AH,Next	;判断是否为30，否则进去STOP，防止循环重复输出
+    MOV R0,#30H
+    RET
 Next:		
 	SJMP PRINTF
-    ;延时	
-DEALAY:						
-    MOV R7,#250 
-    D1: 
-        MOV R6,#250    
-    D2: 
-        DJNZ R6,D2     
-    DJNZ R7,D1  
-    RET
 
-SHELL:
-    MOV DPTR,#00H
-    MOV DPTR,#SHELL_Tab  	
-    MOV 	R1,#00H
-    RET
-SHELLPR:
-    
-    MOV	 A,R1			;下标赋值
-	MOVC A, @A+DPTR		;读取数组数据
-    CLR  ES
-    CLR  TI
-    MOV SBUF,A
-    CALL DEALAY
-
-    INC	R1				;下标自加
-    CALL DEALAY
-    CJNE R1,#0AH,Next2	;判断是否为30，否则进去STOP，防止循环重复输出
-    CALL STOP_2
-Next2:
-    SJMP SHELLPR
     ;停止重复发送 
-STOP_2:
+STOP:
     SETB TI
     SETB ES
-    CALL INTER
+    CALL UART_INTER
+    ;判断进行换行操作   
 CMP_:
-	
-    CJNE A, #30H, RX
-    CALL SHELL
-	CALL SHELLPR
+	CJNE A, #0DH, RX
+    MOV DPTR,#STR0_Tab  	
+    MOV R0,#00H 
+    CALL PRINTF
+    CALL STOP
     ;读取键盘输入
 RX:	
     MOV SBUF,A
     JNB TI,$
     CLR TI
     RET
-INTER:
+UART_INTER:
     PUSH ACC				
     PUSH PSW
     JBC TI, L_EXIT
@@ -93,15 +85,12 @@ L_EXIT:
     POP PSW
     POP ACC
     RETI
-TIME_INIT:
-    MOV 	TL0,#0B0H
-	MOV 	TH0,#3CH
-	SETB 	ET0
-    RET
     ;判断是否发送完毕
 ;要发送的数据
 STR_Tab: 				
-    DB 48H,45H,4CH,4CH,4FH,57H,4FH,52H,4CH,44H,0AH,0DH,57H,45H,4CH,43H,4FH,4DH,45H,0AH,0DH,53H,4DH,41H,4CH,4CH,4FH,53H,0AH,0DH;HELLOWORDWELCOMESMALLOS
-SHELL_TAB:
-    DB 53H,4DH,41H,4CH,4CH,4FH,53H,3AH,0AH,0DH
-END 
+    DB 48H,45H,4CH,4CH,4FH,2CH,48H,49H,21H,21H;HELLO,HI!!
+STR0_TAB:
+    DB 0AH,0DH,53H,4DH,41H,4CH,4CH,4FH,53H,3AH;SMALLOS:
+TIP0:
+    DB 5BH,4FH,4BH,5DH,55H,41H,52H,54H,0AH,0DH;[OK]UART
+END    
