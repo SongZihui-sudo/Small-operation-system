@@ -6,6 +6,7 @@ ORG 	0000H
 ORG 	0023H
     LJMP UART_INTER
 ORG     0030H
+
 Main:
     MOV SP,#60H
     ;初始化串口参数
@@ -16,14 +17,13 @@ Main:
 	MOV TL1,#0FDH 
 	MOV SCON,#50H		
 	MOV PCON,#00H
-    SETB TR1
-	CALL PRINT_TIP
-PRINT_TIP:
+    SETB TR1 
+;/************************串口交互界面·***************************************/
+PRINT_TIP: 
     ;DPTR指向数组
     MOV DPTR,#UART_TIP  	
 	MOV R0,#00H	
     CALL PRINTF
-    CALL TIMER2_ON
     MOV DPTR,#STR_Tab  	 ;解决多次重复输出的BUG
 	MOV R0,#00H	
     CALL PRINTF
@@ -32,14 +32,12 @@ PRINT_TIP2:
     MOV DPTR,#STR0_TAB
     MOV R0,#00H
     CALL PRINTF
-    CALL STOP
+    CALL STOP 
 ;延时	
 DEALAY:						
     MOV R7,#250 
-    D1: 
-        MOV R6,#250    
-    D2: 
-        DJNZ R6,D2     
+    D1: MOV R6,#250    
+    D2: DJNZ R6,D2     
     DJNZ R7,D1  
     RET
 ;输出字符函数   
@@ -63,7 +61,10 @@ STOP:
     CALL UART_INTER
 ;判断进行换行操作   
 CMP_S:          
-    CJNE A, #53H,CMP_ENTER ;S键关闭串口
+    CJNE A, #53H,CMP_ENTER ;S键关闭串口 
+    MOV DPTR,#TIMER_TIP  	
+	MOV R0,#00H	
+    CALL PRINTF
     CALL UART_OFF
 CMP_ENTER:
 	CJNE A, #0DH, RX
@@ -93,9 +94,12 @@ STR0_TAB:
 UART_TIP:
     DB 5BH,4FH,4BH,5DH,55H,41H,52H,54H,0AH,0DH;[OK]UART
 TIMER_TIP:
-    DB 5BH,4FH,4BH,5DH,54H,49H,4DH,45H,0AH,0DH;[OK]TIMER
+    DB 0AH,0DH,5BH,4FH,4BH,5DH,54H,49H,4DH,45H;[OK]TIMER
 OFF_UART:
     DB 0AH,0DH,5BH,58H,58H,5DH,55H,41H,52H,54H;[XX]UART
+;/****************************多任务*************************************/    
+;初步实现了多任务，但是任务一的优先级大于任务二。
+;任务二的运行频率大于任务一。
 ;关闭串口
 UART_OFF:
     CALL RX
@@ -104,22 +108,35 @@ UART_OFF:
     CALL PRINTF
     CLR ES
     CLR TR1
-    RETI
+DISPATCH_TASK1:
+    INC R3
+    CJNE R3,#01H,DISPATCH_TASK2
+    CALL TASK1
+DISPATCH_TASK2:
+    CJNE R3,#02H,DISPATCH_TASK1
+    CALL TASK2
 ;打开定时器2
-TIMER2_ON: 
-    MOV 0XC9,#0		;初始化模式寄存器
+TIMER2_INIT: 
+    MOV 0XC9,#0		;初始化T2寄存器，在文件里没有定义，所以直接用地址0XC9
     MOV T2CON,#0		;初始化控制寄存器
-    MOV TL2,#0A4H		;设置定时初值
-    MOV TH2,#0FFH		;设置定时初值
+    MOV TL2,#000H		;设置定时初值
+    MOV TH2,#0DCH		;设置定时初值
     MOV RCAP2L,#0A4H	;设置定时重载值
     MOV RCAP2H,#0FFH	;设置定时重载值
     SETB TR2		;定时器2开始计时 
-    MOV DPTR,#TIMER_TIP  	
-	MOV R0,#00H	
-    CALL PRINTF
-    RET
+    MOV IE,#0XA0;IE=0XA0    
+    JBC TF2,COUNTER
+COUNTER:
+    INC R1
+    CJNE R1,#100H,TIMER2_INIT
+    CALL DISPATCH_TASK1
 ;任务一
 TASK1:
+    INC R2    
+    CALL TIMER2_INIT
 ;任务二
 TASK2:
-END    
+    INC R4
+    MOV R3,00H ;如果只最后一个任务要情零R3
+    CALL TIMER2_INIT
+END     
