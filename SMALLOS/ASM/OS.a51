@@ -121,27 +121,22 @@ COUNTER:
     MOV  R1,#00H
     INC  R1
     CJNE R1,#01H,TASK1
-/**
-    MOV 0XC9,#0		;初始化T2寄存器，在文件里没有定义，所以直接用地址0XC9
-    MOV T2CON,#0		;初始化控制寄存器
-    MOV TL2,#000H		;设置定时初值
-    MOV TH2,#0DCH		;设置定时初值
-    MOV RCAP2L,#0A4H	;设置定时重载值
-    MOV RCAP2H,#0FFH	;设置定时重载值
-    SETB TR2		;定时器2开始计时 
-    MOV IE,#0XA0;IE=0XA0    
-    RET
-    **/
 ;任务一
 TASK1:
-    CLR P1.0
-    SETB  P1.0
-    JBC TF0, TASK2
+    SETB P1.0
+    CLR  P1.0           
+    JBC TF0, TASK2  ;0.00218S
     CALL TASK1
 ;任务二
 TASK2:
     SETB P1.2
     CLR  P1.2
-    JBC TF0,TASK1
+    JBC TF0,TASK3
     CALL TASK2
-END     
+;任务三
+TASK3:
+    SETB P1.1
+    CLR  P1.1
+    JBC TF0,TASK1
+    CALL TASK3
+END    
