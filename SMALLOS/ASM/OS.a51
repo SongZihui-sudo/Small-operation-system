@@ -137,6 +137,5 @@ TASK1:
 ;任务二
 TASK2:
     INC R4
-    MOV R3,00H ;如果只最后一个任务要情零R3
     CALL TIMER2_INIT
 END     
