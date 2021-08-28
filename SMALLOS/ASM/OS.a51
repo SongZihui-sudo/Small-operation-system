@@ -100,23 +100,28 @@ OFF_UART:
 ;/****************************多任务*************************************/    
 ;初步实现了多任务，但是任务一的优先级大于任务二。
 ;任务二的运行频率大于任务一。
-;关闭串口
+  ;关闭串口
 UART_OFF:
     CALL RX
     MOV DPTR,#OFF_UART  	
 	MOV R0,#00H	
     CALL PRINTF
-    CLR ES
     CLR TR1
-DISPATCH_TASK1:
-    INC R3
-    CJNE R3,#01H,DISPATCH_TASK2
-    CALL TASK1
-DISPATCH_TASK2:
-    CJNE R3,#02H,DISPATCH_TASK1
-    CALL TASK2
-;打开定时器2
-TIMER2_INIT: 
+    CLR ES
+;打开定时器2  
+TIMER2_INIT:
+    ANL TMOD,#0F0H		;设置定时器模式
+	MOV TL0,#091H		;设置定时初值
+	MOV TH0,#0FFH		;设置定时初值
+	CLR TF0			;清除TF0标志
+	SETB TR0		;定时器0开始计时
+    JBC TF0,COUNTER
+COUNTER:
+    SETB TF0
+    MOV  R1,#00H
+    INC  R1
+    CJNE R1,#01H,TASK1
+/**
     MOV 0XC9,#0		;初始化T2寄存器，在文件里没有定义，所以直接用地址0XC9
     MOV T2CON,#0		;初始化控制寄存器
     MOV TL2,#000H		;设置定时初值
@@ -125,17 +130,18 @@ TIMER2_INIT:
     MOV RCAP2H,#0FFH	;设置定时重载值
     SETB TR2		;定时器2开始计时 
     MOV IE,#0XA0;IE=0XA0    
-    JBC TF2,COUNTER
-COUNTER:
-    INC R1
-    CJNE R1,#100H,TIMER2_INIT
-    CALL DISPATCH_TASK1
+    RET
+    **/
 ;任务一
 TASK1:
-    INC R2    
-    CALL TIMER2_INIT
+    CLR P1.0
+    SETB  P1.0
+    JBC TF0, TASK2
+    CALL TASK1
 ;任务二
 TASK2:
-    INC R4
-    CALL TIMER2_INIT
+    SETB P1.2
+    CLR  P1.2
+    JBC TF0,TASK1
+    CALL TASK2
 END     
