@@ -1,3 +1,5 @@
+$NOMOD51
+$INCLUDE(reg52.h)
 ;程序执行的起始地址	
 ORG 	0000H				
     LJMP 	Main			
@@ -7,10 +9,9 @@ ORG     0030H
 Main:
     MOV SP,#60H
     ;初始化串口参数
-   		;9600bps
-    SETB EA				
+   	SETB EA				
 	SETB ES 
-    MOV TMOD,#021H
+    MOV TMOD,#021H;9600bps
     MOV TH1,#0FDH		
 	MOV TL1,#0FDH 
 	MOV SCON,#50H		
@@ -22,6 +23,7 @@ PRINT_TIP:
     MOV DPTR,#UART_TIP  	
 	MOV R0,#00H	
     CALL PRINTF
+    CALL TIMER2_ON
     MOV DPTR,#STR_Tab  	 ;解决多次重复输出的BUG
 	MOV R0,#00H	
     CALL PRINTF
@@ -60,12 +62,6 @@ STOP:
     SETB ES
     CALL UART_INTER
 ;判断进行换行操作   
-CMP_T:
-    CJNE A,#54H,CMP_S ;T键打开定时器 
-    MOV DPTR,#TIMER_TIP  	
-	MOV R0,#00H	
-    CALL PRINTF
-    CALL TIMER_ON
 CMP_S:          
     CJNE A, #53H,CMP_ENTER ;S键关闭串口
     CALL UART_OFF
@@ -84,8 +80,7 @@ UART_INTER:
     JBC TI, L_EXIT
 	CLR RI			;否则清除发送标志位
     MOV A,SBUF
-    
-    CALL CMP_T
+    CALL CMP_S
 L_EXIT:
     POP PSW
     POP ACC
@@ -98,7 +93,7 @@ STR0_TAB:
 UART_TIP:
     DB 5BH,4FH,4BH,5DH,55H,41H,52H,54H,0AH,0DH;[OK]UART
 TIMER_TIP:
-    DB 0AH,0DH,5BH,4FH,4BH,5DH,54H,49H,4DH,45H;[OK]TIMER
+    DB 5BH,4FH,4BH,5DH,54H,49H,4DH,45H,0AH,0DH;[OK]TIMER
 OFF_UART:
     DB 0AH,0DH,5BH,58H,58H,5DH,55H,41H,52H,54H;[XX]UART
 ;关闭串口
@@ -110,12 +105,19 @@ UART_OFF:
     CLR ES
     CLR TR1
     RETI
-;打开软件计时器
-TIMER_ON:
-    INC R1
-    INC R3
-    CJNE R1,#3e8H,TIMER_ON
-    AJMP TASK1
+;打开定时器2
+TIMER2_ON: 
+    MOV 0XC9,#0		;初始化模式寄存器
+    MOV T2CON,#0		;初始化控制寄存器
+    MOV TL2,#0A4H		;设置定时初值
+    MOV TH2,#0FFH		;设置定时初值
+    MOV RCAP2L,#0A4H	;设置定时重载值
+    MOV RCAP2H,#0FFH	;设置定时重载值
+    SETB TR2		;定时器2开始计时 
+    MOV DPTR,#TIMER_TIP  	
+	MOV R0,#00H	
+    CALL PRINTF
+    RET
 ;任务一
 TASK1:
 ;任务二
