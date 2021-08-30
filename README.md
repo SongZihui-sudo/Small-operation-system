@@ -18,7 +18,7 @@ The main functions intended to be implemented are
 1. Multitask scheduling.
 2. add , subtract , multiply and divide
 3. There are also drivers for the key(get data from key),and show it at screen.
-
+日志：
 # 2021-8-25  第一次更新SmallOS 0.1
 基于STC89C52RC单片机，实现字符串的基本输出与输入（通过串口）。
 借助了putty。
@@ -38,3 +38,5 @@ The main functions intended to be implemented are
 
 三任务执行时：
 ![image](https://pcsdata.baidu.com/thumbnail/e1dc7e2caua9fd5e083dc296793345d4?fid=3125802318-16051585-611912426303636&rt=pr&sign=FDTAER-yUdy3dSFZ0SVxtzShv1zcMqd-cD4ZnvVBGId0W93rWqD2W%2F%2FBDP0%3D&expires=2h&chkv=0&chkbd=0&chkpc=&dp-logid=9022164075419536550&dp-callid=0&time=1630155600&bus_no=26&size=c300_u300&quality=100&vuk=-&ft=video)
+# 2021-8-29 第五次更新SmallOS 0.6
+加入了对0.96寸OLED屏幕的驱动，可与串口选择使用。
