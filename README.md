@@ -40,3 +40,4 @@ The main functions intended to be implemented are
 ![image](https://pcsdata.baidu.com/thumbnail/e1dc7e2caua9fd5e083dc296793345d4?fid=3125802318-16051585-611912426303636&rt=pr&sign=FDTAER-yUdy3dSFZ0SVxtzShv1zcMqd-cD4ZnvVBGId0W93rWqD2W%2F%2FBDP0%3D&expires=2h&chkv=0&chkbd=0&chkpc=&dp-logid=9022164075419536550&dp-callid=0&time=1630155600&bus_no=26&size=c300_u300&quality=100&vuk=-&ft=video)
 # 2021-8-29 第五次更新SmallOS 0.6
 加入了对0.96寸OLED屏幕的驱动，可与串口选择使用。
+在默认人状态下将不会打开串口调试，使用要将注释删掉。
