@@ -41,3 +41,5 @@ The main functions intended to be implemented are
 # 2021-8-29 第五次更新SmallOS 0.6
 加入了对0.96寸OLED屏幕的驱动，可与串口选择使用。
 在默认人状态下将不会打开串口调试，使用要将注释删掉。但是会花屏，暂时未找到原因，后续会改进。
+# 2021-8-30 第六次更新
+加入了LED点阵屏的驱动
