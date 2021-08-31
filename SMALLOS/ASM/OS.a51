@@ -4,13 +4,21 @@ $INCLUDE(reg52.h)
 ORG 	0000H				
     LJMP 	Main			
 ORG 	0023H
-    LJMP UART_INTER
+;    LJMP UART_INTER
 ORG     0030H
 
 Main:
     MOV SP,#60H
     ;初始化串口参数
-   	SETB EA				
+    ;ACALL UAER_INIT
+    ;LCALL OLED_INIT
+    ;LCALL OLED_SHOW_put_char_8x16
+    ;LCALL OLED_CHAR_SHOW
+     LCALL LED_INIT
+;/************************串口交互界面·***************************************/
+/**
+UAER_INIT:
+    SETB EA				
 	SETB ES 
     MOV TMOD,#021H;9600bps
     MOV TH1,#0FDH		
@@ -18,10 +26,7 @@ Main:
 	MOV SCON,#50H		
 	MOV PCON,#00H
     SETB TR1 
-    CALL OLED_INIT
-    CALL OLED_SHOW_put_char_8x16
-    CALL OLED_CHAR_SHOW
-;/************************串口交互界面·***************************************/
+    RET
 PRINT_TIP: 
     ;DPTR指向数组
     MOV DPTR,#UART_TIP  	
@@ -101,11 +106,12 @@ TIMER_TIP:
     DB 0AH,0DH,5BH,4FH,4BH,5DH,54H,49H,4DH,45H;[OK]TIMER
 OFF_UART:
     DB 0AH,0DH,5BH,58H,58H,5DH,55H,41H,52H,54H;[XX]UART
-
+**/
 ;/****************************多任务*************************************/    
 ;初步实现了多任务，但是任务一的优先级大于任务二。
 ;任务二的运行频率大于任务一。
   ;关闭串口
+/*
 UART_OFF:
     CALL RX
     MOV DPTR,#OFF_UART  	
@@ -113,6 +119,8 @@ UART_OFF:
     CALL PRINTF
     CLR TR1
     CLR ES
+    */
+
 ;打开定时器2  
 TIMER2_INIT:
     ANL TMOD,#0F0H		;设置定时器模式
@@ -147,54 +155,48 @@ TASK3:
 
 ;/****************************OLED驱动****************************/
 ;/****************************屏幕交互界面**********************/
+/**
 
-DELAY10US:			;@11.0592MHz
-	PUSH 30H
-	MOV 30H,#19
-NEXT_D:
-	DJNZ 30H,NEXT_D
-	POP 30H
-	RET
 OLED_INIT_ON:
     SETB P1.0       ;P1.0 SDA
     ACALL DELAY10US 
-    SETB P0.0       ;P1.1 SCL
+    SETB P1.1      ;P1.1 SCL
     ACALL DELAY10US
     CLR P1.0
     ACALL DELAY10US
-    CLR P0.0
+    CLR P1.1
     ACALL DELAY10US
     RET
 OLED_INIT_STOP:
     CLR P1.0
     ACALL DELAY10US
-    SETB P0.0
+    SETB P1.1
     ACALL DELAY10US
     SETB P1.0
     ACALL DELAY10US
     RET
 OLED_SEND:
     INC R3
-    ;MOV P1,A
     RLC A
-    CLR P0.0
-    ACALL DELAY10US
     MOV P1.0,C
     ACALL DELAY10US
-    SETB P0.0
+    SETB P1.1
     ACALL DELAY10US
-    CJNE R3,#08H,OLED_SEND
-    CLR P0.0
+    CLR P1.1
+    ACALL DELAY10US
+    CJNE R3,#0X07,OLED_SEND
+
+    CLR P1.1
     ACALL DELAY10US
     SETB P1.0
     ACALL DELAY10US
 LOOP:
-    SETB P0.0
+    SETB P1.1
     ACALL DELAY10US
     JNB P1.0,OLED_SEND_O
     AJMP LOOP
 OLED_SEND_O:
-    CLR  P0.0
+    CLR  P1.1
     ACALL DELAY10US
     RET
 OLED_WRITE:
@@ -212,10 +214,13 @@ OLED_WRITE:
     RET
 OELD_WRITE_DATA:
     ACALL OLED_INIT_ON
+    MOV R3,#00H
     MOV A,#0X78
     ACALL OLED_SEND
+    MOV R3,#00H
     MOV A,#0X40
     ACALL OLED_SEND
+    MOV R3,#00H
     MOV A,R5
     ACALL OLED_SEND
     ACALL OLED_INIT_STOP
@@ -228,18 +233,20 @@ OLED_CLEAR:
 LOOP_CLEAR:
     INC R3
     ADD A,R3
-    ACALL OLED_WRITE
-    MOV R4,#0XB0
+    ADD A,#0XB0
+    MOV R4,A
     ACALL OLED_WRITE
     MOV R4,#0X00
     ACALL OLED_WRITE
     MOV R4,#0X10
     ACALL OLED_WRITE
-    CJNE R3,#08H,LOOP_CLEAR
 LOOP_CLEAR_2:
-    INC R3
-    MOV A,#0X00
-    CJNE R3,#128,LOOP_CLEAR_2
+    INC R2
+    MOV R5,#0X00
+    ACALL OELD_WRITE_DATA
+    CJNE R2,#0X80,LOOP_CLEAR_2
+    MOV R2,#30H
+    CJNE R3,#0X08,LOOP_CLEAR
     RET
 DELAY500US:			;@11.0592MHz
 	NOP
@@ -272,6 +279,8 @@ OLED_INIT:
     MOV R4,#0XC8
     ACALL OLED_WRITE
     MOV R4,#0XA6
+    ACALL OLED_WRITE
+    MOV R4,#0XA8
     ACALL OLED_WRITE
     MOV R4,#0X3F
     ACALL OLED_WRITE
@@ -331,7 +340,99 @@ OLED_SHOW_put_char_8x16:
     ACALL OLED_WRITE
     RET
 OLED_CHAR_SHOW:
-    MOV R5,#0X00
-    ACALL OELD_WRITE_DATA
+    MOV DPTR,#STR_OLED01
+    ACALL PRINTF_OLED
+    MOV DPTR,#STR_0LED02
+    ACALL PRINTF_OLED
+    
+    MOV DPTR,#STR_0LED03
+    ACALL PRINTF_OLED
+
+    MOV DPTR,#STR_0LED03
+    ACALL PRINTF_OLED
+
+    MOV DPTR,#STR_0LED04
+    ACALL PRINTF_OLED
     RET
+PRINTF_OLED: 
+    MOV	 A,R0			;下标赋值
+	MOVC A, @A+DPTR		;读取数组数据
+    MOV R5,A
+    ACALL OELD_WRITE_DATA
+    INC	R0				;下标自加
+    CJNE R0,#10H,Next_OLED	;判断是否为30，否则进去STOP，防止循环重复输出
+    MOV R0,#30H 
+    RET
+Next_OLED:		
+	SJMP PRINTF_OLED
+STR_OLED01:
+    DB 000H ,0F0H ,080H ,080H ,000H ,00FH ,000H ,000H
+STR_0LED02:
+    DB 000H ,0F0H, 090H, 090H, 000H, 00FH, 008H, 008H 
+STR_0LED03:
+    DB 000H ,0F0H ,000H ,000H ,000H ,00FH ,008H ,008H
+STR_0LED04:
+    DB 0C0H ,030H ,010H ,010H ,003H ,00CH ,008H ,008H
+/*
+DB 00H F0H 80H 80H 00H 0FH 00H 00H;"H",0
+
+DB 00H F0H 90H 90H 00H 0FH 08H 08H;"E",1
+
+DB 00H F0H 00H 00H 00H 0FH 08H 08H;"L",2
+
+DB 00H F0H 00H 00H 00H 0FH 08H 08H;"L",3
+
+DB C0H 30H 10H 10H 03H 0CH 08H 08H;"O",4
+*/
+
+;/**********************LED点阵屏幕交互************************************/
+DELAY10US:			;@11.0592MHz
+	PUSH 30H
+	MOV 30H,#19
+NEXT_D:
+	DJNZ 30H,NEXT_D
+	POP 30H
+	RET
+LED_INIT:
+    AHC595_SEND:
+        SCLK BIT P1.0
+        RCRK BIT P1.1
+        SER  BIT P1.2
+        CLR SCLK
+        CLR RCRK
+        MOV P0,#0XFF
+        MOV P2,#0XFF
+    LOOP_SEND:
+        INC R2
+        RLC A
+        MOV SER,C
+         SETB SCLK
+        ACALL DELAY10US
+        CLR SCLK
+        CJNE R2,#0X08,LOOP_SEND
+        SETB RCRK
+        ACALL DELAY10US
+        CLR RCRK
+    RET
+LED_WRITE:
+    MOV DPTR,#STR_LED01
+    ACALL LED_PRINTF
+LED_PRINTF:
+    MOV	 A,R0			;下标赋值
+	MOVC A, @A+DPTR		;读取数组数据
+    ACALL LED_INIT
+    INC	R0				;下标自加
+    CJNE R0,#10H,Next_LED	;判断是否为30，否则进去STOP，防止循环重复输出
+    MOV R0,#30H 
+    RET
+Next_LED:		
+	SJMP LED_PRINTF
+STR_LED01:
+    DB 000H ,0F0H ,080H ,080H ,000H ,00FH ,000H ,000H
+STR_LED02:
+    DB 000H ,0F0H, 090H, 090H, 000H, 00FH, 008H, 008H 
+STR_LED03:
+    DB 000H ,0F0H ,000H ,000H ,000H ,00FH ,008H ,008H
+STR_LED04:
+    DB 0C0H ,030H ,010H ,010H ,003H ,00CH ,008H ,008H
 END     
